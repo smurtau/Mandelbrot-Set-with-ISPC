@@ -14,24 +14,6 @@ typedef struct {
     int numThreads;
 } WorkerArgs;
 
-static inline int mandel(float c_re, float c_im, int count)
-{
-    float z_re = c_re, z_im = c_im;
-    int i;
-    for (i = 0; i < count; ++i) {
-
-        if (z_re * z_re + z_im * z_im > 4.f)
-            break;
-
-        float new_re = z_re*z_re - z_im*z_im;
-        float new_im = 2.f * z_re * z_im;
-        z_re = c_re + new_re;
-        z_im = c_im + new_im;
-    }
-
-    return i;
-}
-
 extern void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
@@ -49,8 +31,11 @@ void* workerThreadStart(void* threadArgs) {
     WorkerArgs* args = static_cast<WorkerArgs*>(threadArgs);
 
     // TODO: Implement worker thread here.
+    int start = (args->height/args->numThreads) * args->threadId;
+    int num = (args->height/args->numThreads);
+    mandelbrotSerial(args->x0,args->y0,args->x1,args->y1,args->width,args->height,start,num,args->maxIterations,args->output);
 
-    printf("Hello world from thread %d\n", args->threadId);
+    //printf("Hello world from thread %d\n", args->threadId);
 
     return NULL;
 }
@@ -80,6 +65,16 @@ void mandelbrotThread(
     for (int i=0; i<numThreads; i++) {
         // TODO: Set thread arguments here.
         args[i].threadId = i;
+        args[i].numThreads = numThreads;
+        args[i].height = height;
+        args[i].width = width;
+        args[i].x0 = x0;
+        args[i].x1 = x1;
+        args[i].y0 = y0;
+        args[i].y1 = y1;
+        args[i].maxIterations = maxIterations;
+        args[i].output = output;
+
     }
 
     // Fire up the worker threads.  Note that numThreads-1 pthreads
