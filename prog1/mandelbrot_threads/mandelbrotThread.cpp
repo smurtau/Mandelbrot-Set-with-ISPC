@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
+#include <algorithm>
 
 #include "CycleTimer.h"
 
@@ -28,14 +29,20 @@ extern void mandelbrotSerial(
 // Thread entrypoint.
 void* workerThreadStart(void* threadArgs) {
 
+    double minThread = 1e30;
     WorkerArgs* args = static_cast<WorkerArgs*>(threadArgs);
 
     // TODO: Implement worker thread here.
     int start = (args->height/args->numThreads) * args->threadId;
     int num = (args->height/args->numThreads);
+    double startTime = CycleTimer::currentSeconds();
     mandelbrotSerial(args->x0,args->y0,args->x1,args->y1,args->width,args->height,start,num,args->maxIterations,args->output);
+    double endTime = CycleTimer::currentSeconds();
+    minThread = std::min(minThread, endTime - startTime);
 
     //printf("Hello world from thread %d\n", args->threadId);
+
+    printf("[Mandelbrot Thread %d]:\t\t[%.3f] ms\n",args->threadId, minThread * 1000);
 
     return NULL;
 }
